@@ -176,11 +176,11 @@ fn test_boucle() {
     'boucle1: loop {
         println!("boucle1");
         loop {
-            if y==5 {
+            if y == 5 {
                 break 'boucle1;
             }
             println!("boucle 2 y={y}");
-            y+=1;
+            y += 1;
         }
     }
 
@@ -212,14 +212,13 @@ fn test_boucle() {
         println!("{} !", nombre);
     }
     println!("DÉCOLLAGE !!!");
-
 }
 
-fn prendre_possetion(texte: String){
+fn prendre_possetion(texte: String) {
     println!("{texte}");
 }
 
-fn prend_et_rend(texte: String)->String{
+fn prend_et_rend(texte: String) -> String {
     println!("{texte}");
     texte
 }
@@ -230,7 +229,7 @@ fn calculer_taille(s: String) -> (String, usize) {
     (s, taille) // retourne un tuple
 }
 
-fn test_possetion(){
+fn test_possetion() {
     let s1 = String::from("hello");
     let s2 = s1; // s2 prend la possétion et s1 est détruit
     // println!("s1 = {}, s2 = {}", s1, s2); // plante à la compil car s1 est détruit
@@ -241,7 +240,7 @@ fn test_possetion(){
     prendre_possetion(s2);
     // println!("{s2}"); // ça plante car l'appel à la fonction à détruit la chaine.
     let s1 = String::from("hello");
-    let s2=prend_et_rend(s1); 
+    let s2 = prend_et_rend(s1);
     println!("s2 = {s2}"); // ça passe la chaine initiale n'a pas été détruite
 
     let s1 = String::from("hello");
@@ -253,10 +252,94 @@ fn calculer_taille2(s: &String) -> usize {
     s.len()
 }
 
-fn test_reference(){
+fn test_reference() {
     let s1 = String::from("hello");
     let long = calculer_taille2(&s1); // le & permet d'utiliser la variable sans en prendre possétion
-    println!("La taille de '{}' est {}.", s1, long);
+    println!("La taille de '{}' est {}.", s1, long); // donc s1 est toujours utilisable après l'appel à la fonction
+}
+
+fn calculer_taille_et_modifie(s: &mut String) -> usize {
+    s.push_str(" toto");
+    s.len()
+}
+
+fn test_reference_mutable() {
+    let mut s1 = String::from("hello");
+    let long = calculer_taille_et_modifie(&mut s1); // le & permet d'utiliser la variable sans en prendre possétion et mut qu'on authorise sa modification
+    println!("La taille de '{}' est {}.", s1, long); // donc s1 est toujours utilisable après l'appel à la fonction
+
+    let mut s = String::from("hello");
+    let r1 = &mut s;
+    //let r2 = &mut s; // ne compile pas car on ne peut avoir qu'une seule référence mutable à un instant t
+    //println!("{}, {}", r1, r2);
+}
+
+fn test_slice() {
+    let mut a = [1, 2, 3, 4, 5];
+    {
+        let slice = &mut a[1..3]; // slice est un extrait du tableau
+        // a[2]=10; // interdit car tant que la slice est dans la portée a ne peut plus être modifiée
+        slice[0] = 99;
+        println!("{slice:?}");
+    }
+    a[3] = 100;
+    println!("{a:?}");
+}
+
+// déclaration
+#[derive(Debug)] // permet l'impléùentation automatique del'affichage pour le debug
+struct Utilisateur {
+    actif: bool,
+    pseudo: String,
+    email: String,
+    nombre_de_connexions: u64,
+}
+
+fn creer_utilisateur(email: String, pseudo: String) -> Utilisateur {
+    Utilisateur {
+        email,  // ou email: email,
+        pseudo, // ou pseudo: pseudo,
+        actif: true,
+        nombre_de_connexions: 1,
+    }
+}
+
+fn test_structure() {
+    // instanciation
+    let mut utilisateur1 = Utilisateur {
+        email: String::from("quelquun@example.com"),
+        pseudo: String::from("pseudoquelconque123"),
+        actif: true,
+        nombre_de_connexions: 1,
+    };
+
+    //accès aux champs
+    utilisateur1.email = String::from("unautremail@example.com");
+
+    // instanciation via une fonction
+    let utilisateur2 = creer_utilisateur(
+        String::from("quelquun@example.com"),
+        String::from("pseudoquelconque123"),
+    );
+
+    let utilisateur3 = Utilisateur {
+        email: String::from("quelquundautre@example.com"),
+        ..utilisateur1 // ajoute les autres attributs mais utilisateur1.pseudo n'est pas accessible il faudra utiliser utilisateur3.pseudo
+    };
+
+    println!("utilisateur1.pseudo = {}", utilisateur1.email); // on ne peut pas mettre pseudo car u
+    println!("utilisateur2.pseudo = {}", utilisateur2.pseudo);
+    println!("utilisateur3.pseudo = {}", utilisateur3.pseudo);
+
+    dbg!(utilisateur2);
+
+    // on peut faire des structures sans nommer les champs un peu comme les tuples :
+    struct Couleur(i32, i32, i32);
+    struct Point(i32, i32, i32);
+    let noir = Couleur(0, 0, 0);
+    let mut origine = Point(0, 0, 0);
+    origine.2=3;
+    println!("origine.2 = {}",origine.2);
 }
 
 fn main() {
@@ -272,4 +355,7 @@ fn main() {
     test_boucle();
     test_possetion();
     test_reference();
+    test_reference_mutable();
+    test_slice();
+    test_structure();
 }
