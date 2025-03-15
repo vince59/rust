@@ -1,0 +1,13 @@
+{% extends "main" %}
+{% block title %}{{ super() }} | {{ title }} {% endblock %}
+{% block body %}
+<label for="nbdays">
+    Nb de jours :
+    <input type="number" name="nbdays" value="{{nbdays}}">
+    {% for day in days %}
+    <ul>
+        <li>{{ day }}</li>
+    </ul>
+    {% endfor %}
+</label>
+{% endblock %}
