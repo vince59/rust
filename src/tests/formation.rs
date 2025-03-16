@@ -129,7 +129,7 @@ fn test_tableau() {
     println!("a = {}", a[0]);
     let a = [3; 5]; // initialise un tableau de 5 élément contenant des 3
     println!("a = {a:?}");
-    let mut x = [[0; 4], [0; 4]];
+    let mut x = [[0; 4], [0; 4]]; // tableau à plusieurs dimensions
     x[0][0] = 10;
     x[0][1] = 20;
     x[0][2] = 30;
@@ -338,8 +338,107 @@ fn test_structure() {
     struct Point(i32, i32, i32);
     let noir = Couleur(0, 0, 0);
     let mut origine = Point(0, 0, 0);
-    origine.2=3;
-    println!("origine.2 = {}",origine.2);
+    origine.2 = 3;
+    println!("origine.2 = {}", origine.2);
+}
+
+struct Rectangle {
+    // champs de la classe
+    hauteur: u32,
+    largeur: u32,
+}
+
+impl Rectangle {
+    // fonction de la classe
+    fn aire(&self) -> u32 {
+        // comme en python 1er paramètre = self
+        self.hauteur * self.largeur
+    }
+
+    fn carre(cote: u32) -> Rectangle {
+        // fonction statique qui peut être utilisé comme constructeur
+        Rectangle {
+            largeur: cote,
+            hauteur: cote,
+        }
+    }
+}
+
+fn test_methode() {
+    let rect1 = Rectangle {
+        hauteur: 20,
+        largeur: 30,
+    };
+    println!("aire = {}", rect1.aire());
+    let carre = Rectangle::carre(10);
+    println!("aire du carré = {}", carre.aire());
+}
+
+#[derive(Debug)]
+enum Message {
+    Quitter,
+    Deplacer { x: i32, y: i32 },
+    Ecrire(String),
+    ChangerCouleur(i32, i32, i32),
+}
+
+impl Message {
+    // on ajoute des méthodes à l'enum, les méthodes sont communes à toutes les variantes de l'enum
+    fn appeler(&self, p: &str) {
+        println!("ici on va faire un truc {p}");
+        dbg!(self);
+    }
+}
+
+#[derive(Debug)] // pour pouvoir afficher l'État
+enum EtatUs {
+    // ex: liste des états américains
+    Alabama,
+    Alaska,
+}
+
+enum PieceUs {
+    // type de pièces de monnaies US
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(EtatUs), // pour cette pièce on stocke aussi l'état car la pièce est différente selon l'état
+}
+
+fn valeur_en_centimes(piece: PieceUs) -> u8 {
+    match piece {
+        // on peut utiliser match avec les énums
+        PieceUs::Penny => 1,
+        PieceUs::Nickel => 5,
+        PieceUs::Dime => 10,
+        // PieceUs::Quarter(_) => {println!("toto"); 10}, // ici on ne récupère pas le paramètre
+        PieceUs::Quarter(etat) => {
+            // le match va tenir compte du motif et on peut récupérrer la valeur du paramètre
+            println!("Il s'agit d'un quarter de l'État de {:?} !", etat);
+            25
+        }
+    }
+}
+
+fn test_enum() {
+    let mess_quitter = Message::Quitter;
+    let mess_deplacer = Message::Deplacer { x: 20, y: 30 }; // on instancie une des variantes de l'enum en passant les données
+    mess_deplacer.appeler("bidule"); // on appel la méthode de l'énum
+    let c = Message::ChangerCouleur(1, 2, 3);
+    c.appeler("truc");
+    mess_quitter.appeler("quitter");
+
+    let piece = PieceUs::Quarter(EtatUs::Alabama); // on instancie une variante de Piece
+    let centimes = valeur_en_centimes(piece); // on peut passer l'instance
+    let centimes = valeur_en_centimes(PieceUs::Quarter(EtatUs::Alabama)); // ou la valeur directement
+    println!("{centimes}");
+
+    let x : i32 = None;
+
+    let y = 10;
+
+    let z = x+y;
+    println!("z={z}");
 }
 
 fn main() {
@@ -358,4 +457,6 @@ fn main() {
     test_reference_mutable();
     test_slice();
     test_structure();
+    test_methode();
+    test_enum();
 }
