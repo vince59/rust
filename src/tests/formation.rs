@@ -51,6 +51,17 @@ fn test_match() {
     }
 }
 
+fn test_match2() {
+    let jete_de_de = 9;
+    match jete_de_de {
+        // le match impose de tester toutes les valeurs
+        3 => println!("trois"),
+        7 => println!("sept"),
+        autre_entier => println!("autre : {autre_entier}"), // soit cas par défaut, soit on teste toutes les valeur possibles
+        _ => (), // inutile ici mais si ne veux pas récupérer la valeur par défaut on peut mettre le _ et pour ne rien faire on met ()
+    }
+}
+
 fn test_mutable() {
     const A: i16 = 10; // on doit préciser le type et c'est forcément une constante, on met le nom en majuscule (convention)
     let nombre_secret = rand::rng().random_range(1..=100);
@@ -110,6 +121,7 @@ fn test_tuple() {
 }
 
 fn test_tableau() {
+    // un tableau à une taille fixe, on ne peut pas ajouter d'élément dedans
     let mois = [
         "Janvier",
         "Février",
@@ -432,13 +444,124 @@ fn test_enum() {
     let centimes = valeur_en_centimes(piece); // on peut passer l'instance
     let centimes = valeur_en_centimes(PieceUs::Quarter(EtatUs::Alabama)); // ou la valeur directement
     println!("{centimes}");
+}
 
-    let x : i32 = None;
+fn plus_un(x: Option<i32>) -> Option<i32> {
+    match x {
+        Some(i) => Some(i + 1),
+        None => None,
+    }
+}
 
-    let y = 10;
+fn test_option() {
+    let cinq = Some(5);
+    let six = plus_un(cinq);
+    let none = plus_un(None);
+}
 
-    let z = x+y;
-    println!("z={z}");
+fn test_if_let() {
+    let une_valeur_u8 = Some(0o77u8); // 77 en base octale stocké dans un unsigned int sur 8 bits
+    if let Some(max) = une_valeur_u8 {
+        println!("Le maximum est réglé sur {}", max);
+    }
+
+    // équivallent à :
+
+    match une_valeur_u8 {
+        Some(max) => println!("Le maximum est réglé sur {}", max),
+        _ => (),
+    }
+}
+
+fn test_vecteurs() {
+    let v = vec![1, 2, 3, 4]; // déclaration d'un vecteur, tous les éléments d'un vecteur sont forcément du même type
+    let troisieme: &i32 = &v[2]; // accés à un indice (commence à 0)
+    println!("Le troisième élément est {}", troisieme);
+
+    match v.get(2) {
+        // on peut y accéder avec get et gérer le débordement d'indice
+        Some(troisieme) => println!("Le troisième élément est {}", troisieme),
+        None => println!("Il n'y a pas de troisième élément."),
+    }
+
+    //let existe_pas = &v[100]; // plante à l'éxécution
+    let existe_pas = v.get(100);
+    match existe_pas {
+        Some(x) => println!("élément 100 est {}", x),
+        None => println!("erreur"),
+    }
+
+    let mut vec = vec![1, 2, 3, 4];
+
+    vec.push(5); // Ajoute un élément à la fin
+    println!("vec1 = {:?}", vec); // 
+
+    let tableau = [1, 2, 3, 4];
+    let mut vec: Vec<i32> = tableau.to_vec(); // convertis un tableau en vecteurs
+
+    vec.push(9);
+    println!("vec2 = {:?}", vec);
+
+    let mut v = vec![100, 32, 57];
+    for i in &mut v {
+        // itération sur un vecteur et &mut indique que l'on va modifier le vecteur
+        *i += 50; // le *i déréférence i, on peut alors changer la valeur du vecteur, ici on ajoute 50 à chaque occurrence
+    }
+    println!("vec2 = {:?}", v);
+
+    for i in v {
+        // itération sur un vecteur et &mut indique que l'on va modifier le vecteur
+        println!("i = {}", i);
+    }
+
+    let vec2 = vec!["a", "b", "c"];
+
+    for (index, value) in vec2.iter().enumerate() { // permet d'itérer sur le vecteur en ayant l'indice on peut utiliser iter_mut pour modifier le contenu
+        println!("Indice: {}, Valeur: {}", index, value);
+    }
+
+    // on montre ici qu'avec une énumération on peut stocker des types différents (mais exhaustif et qu'on connait au départ) 
+    // dans un vecteur en utilant un enum :
+    #[derive(Debug)]
+    enum Cellule {
+        Int(i32),
+        Float(f64),
+        Text(String),
+    }
+    
+    let ligne = vec![
+        Cellule::Int(3),
+        Cellule::Text(String::from("bleu")),
+        Cellule::Float(10.12),
+    ];
+
+    for val in ligne {
+        println!("{:?}",val);
+    }
+}
+
+fn test_string(){
+    let mut s = String::new(); // Création d'une chaine vide
+
+    let donnee = "contenu initial1";
+
+    let s = donnee.to_string(); // création d'une chaine à partir d'un str
+
+    // cette méthode fonctionne aussi directement sur un
+    // littéral de chaîne de caractères :
+    let s = "contenu initial2".to_string();
+    //ou 
+    let s = String::from("contenu initial3"); /// idem
+
+    println!("{s}");
+
+    let mut s = String::from("foo");
+    s.push_str("bar"); // ajoute une chaine à la fin
+    println!("{s}");
+
+    let mut s = String::from("lo");
+    s.push('l'); // on ajoute un seul caractère à la chaine
+    println!("{s}");
 }
 
 fn main() {
@@ -459,4 +582,9 @@ fn main() {
     test_structure();
     test_methode();
     test_enum();
+    test_option();
+    test_match2();
+    test_if_let();
+    test_vecteurs();
+    test_string();
 }
