@@ -2,6 +2,8 @@
 name = "rust"
 version = "0.1.0"
 edition = "2024"
+#indique le binaire par défaut quand on lance cargo run
+default-run = "formation"
 
 [dependencies]
 axum = "0.8.1"

@@ -516,11 +516,12 @@ fn test_vecteurs() {
 
     let vec2 = vec!["a", "b", "c"];
 
-    for (index, value) in vec2.iter().enumerate() { // permet d'itérer sur le vecteur en ayant l'indice on peut utiliser iter_mut pour modifier le contenu
+    for (index, value) in vec2.iter().enumerate() {
+        // permet d'itérer sur le vecteur en ayant l'indice on peut utiliser iter_mut pour modifier le contenu
         println!("Indice: {}, Valeur: {}", index, value);
     }
 
-    // on montre ici qu'avec une énumération on peut stocker des types différents (mais exhaustif et qu'on connait au départ) 
+    // on montre ici qu'avec une énumération on peut stocker des types différents (mais exhaustif et qu'on connait au départ)
     // dans un vecteur en utilant un enum :
     #[derive(Debug)]
     enum Cellule {
@@ -528,7 +529,7 @@ fn test_vecteurs() {
         Float(f64),
         Text(String),
     }
-    
+
     let ligne = vec![
         Cellule::Int(3),
         Cellule::Text(String::from("bleu")),
@@ -536,11 +537,11 @@ fn test_vecteurs() {
     ];
 
     for val in ligne {
-        println!("{:?}",val);
+        println!("{:?}", val);
     }
 }
 
-fn test_string(){
+fn test_string() {
     let mut s = String::new(); // Création d'une chaine vide
 
     let donnee = "contenu initial1";
@@ -550,8 +551,9 @@ fn test_string(){
     // cette méthode fonctionne aussi directement sur un
     // littéral de chaîne de caractères :
     let s = "contenu initial2".to_string();
-    //ou 
-    let s = String::from("contenu initial3"); /// idem
+    //ou
+    let s = String::from("contenu initial3");
+    /// idem
 
     println!("{s}");
 
@@ -562,6 +564,245 @@ fn test_string(){
     let mut s = String::from("lo");
     s.push('l'); // on ajoute un seul caractère à la chaine
     println!("{s}");
+
+    let s1 = String::from("Hello, ");
+    let s2 = String::from("world!");
+    let s3 = s1 + &s2; // notez que s1 a été déplacé dans s3 et ne pourra plus être utilisé (s1 est détruit)
+    println!("s2 = {s2}");
+    println!("s3 = {s3}");
+
+    // si on veut concaténer plusieurs chaine il vaut mieux utiliser la macro format! :
+
+    let s1 = String::from("tic");
+    let s2 = String::from("tac");
+    let s3 = String::from("toe");
+
+    let s = format!("{}-{}-{}", s1, s2, s3); // ne prend pas possession des variables
+    println!("s={s}");
+    println!("{}-{}-{}", s1, s2, s3);
+
+    for c in "ça va ?नमस्ते".chars() {
+        // itérer sur les caractères de la chaine (utf8)
+        println!("{}", c);
+    }
+}
+
+fn test_table_de_hachage() {
+    use std::collections::HashMap;
+
+    let mut scores = HashMap::new(); // équivallent des tableaux associatif du php
+
+    scores.insert(String::from("Bleu"), 10); // équivallent en json : {"Bleu":10,"Jaune",50}
+    scores.insert(String::from("Jaune"), 50);
+
+    let nom_equipe = String::from("Bleu");
+    let score = scores.get(&nom_equipe);
+
+    println!("score = {:?}", score);
+    println!("score = {:?}", scores.get("Rouge")); // va donner None
+
+    // itérer sur la table de hachage
+    for (cle, valeur) in &scores {
+        println!("clé = {} : valeur = {}", cle, valeur);
+    }
+
+    // construire une table de hachage avec un vecteur contenant les clé et un autre les valeurs :
+
+    let equipes = vec![String::from("Bleu"), String::from("Jaune")]; // les clés
+    let scores_initiaux = vec![10, 50]; // les valeurs
+
+    let mut scores: HashMap<_, _> = equipes
+        .into_iter()
+        .zip(scores_initiaux.into_iter())
+        .collect();
+    println!("{:?}", scores);
+
+    let nom_champ = String::from("Couleur favorite");
+    let valeur_champ = String::from("Bleu");
+
+    let mut table = HashMap::new();
+    table.insert(nom_champ, valeur_champ);
+    println!("{:?}", table);
+
+    //println!("{}",nom_champ); // ici on n peut pas faire ça car nom_champ n'existe plus
+
+    // changer la valeur d'une clé :
+    scores.insert(String::from("Bleu"), 10);
+    scores.insert(String::from("Bleu"), 25); // le 25 écrase le 10
+
+    // Ajoute un valeur que si la clé n'existe pas déjà :
+
+    scores.entry(String::from("Jaune")).or_insert(50); // Jaune = 50
+    scores.entry(String::from("Bleu")).or_insert(50); // on garde le bleu = 25
+
+    println!("{:?}", scores);
+
+    // Modifier une valeur en fonction de l'ancienne :
+
+    let texte = "bonjour le monde magnifique monde";
+
+    let mut table = HashMap::new();
+
+    for mot in texte.split_whitespace() {
+        // boucle sur les mots si il y a un espace entre chauqe
+        let compteur = table.entry(mot).or_insert(0); // retourne l'adresse de la valeur de la clé
+        *compteur += 1; // on ajoute 1 à la valeur du coup ça compte le nombre de fois qu'on a le même mot
+    }
+    println!("nb mots = {:?}", table);
+
+    let mut th: HashMap<_, _> = HashMap::new(); // la clé et la valeur peuvent être ce qu'on veut mais identique pour toutes les occurences
+    let a: [i32; 5] = [1, 2, 3, 4, 5];
+    th.insert("clé", a); // ici la valeur c'est un tableau
+    println!("valeurs = {:?}", th);
+
+    let mut th2: HashMap<_, _> = HashMap::new();
+
+    #[derive(Debug)]
+    // la valeur peut être un énum
+    enum Cellule {
+        Int(i32),
+        Float(f64),
+        Text(String),
+        Toto([i32; 5]),
+    }
+
+    th2.insert("clé 1", Cellule::Float((10.2))); // ici la valeur c'est un flotant
+    th2.insert("clé 2", Cellule::Int(10)); // ici la valeur c'est un entier de 10
+    th2.insert("clé 3", Cellule::Text("toto".to_string())); // ici la valeur c'est une chaine
+    th2.insert("clé 4", Cellule::Toto([10, 11, 12, 13, 55])); // ici la valeur c'est un tableau de 5 entiers
+
+    println!("{:?}", th2);
+}
+
+fn test_panic() {
+    //panic!("Erreur fin du programme"); // déclenche l'arrête du programme et affiche l'erreur
+
+    let v = vec![1, 2, 3];
+    //v[99]; // provoque un panic car l'indice n'existe pas
+    // pour avoir la back trace :
+    //$env:RUST_BACKTRACE=1; cargo run
+}
+
+// le result ne termine pas le programme et renvoi la gestion de l'erreur au programme appelant
+fn test_result() {
+    use std::fs::File;
+    use std::io::ErrorKind;
+
+    let f = File::open("hello.txt"); // renvoi un Result, pas le gestionnaire lui-même
+    let f = match f {
+        // ici f va recevoir le gestionnaire de fichier sinon le programme plante
+        Ok(fichier) => fichier,
+        Err(erreur) => panic!("Erreur d'ouverture du fichier : {:?}", erreur),
+    };
+
+    // là on fait pareil mais on test les différents types d'erreur
+    let f = File::open("hello.txt");
+    let f = match f {
+        Ok(fichier) => fichier, // le fichier est ouvert, on le renvoi
+        Err(erreur) => match erreur.kind() {
+            // ça n'a pas marché, on regarde pourquoi
+            ErrorKind::NotFound => match File::create("hello.txt") {
+                // il n'existe pas => on le cree
+                Ok(fc) => fc, // si la création est ok on retourne le gestionnaire de fichier
+                Err(e) => panic!("Erreur de création du fichier : {:?}", e), // la création peut aussi planter
+            },
+            autre_erreur => { // si c'est un autre problème on s'arrête et on affiche l'erreur
+                panic!("Erreur d'ouverture du fichier : {:?}", autre_erreur)
+            }
+        },
+    };
+
+    // on peut utiliser unwrap_or_else pour éviter d'utiliser des match imbriqués :
+    let f = File::open("hello.txt").unwrap_or_else(|erreur| {
+        if erreur.kind() == ErrorKind::NotFound {
+            File::create("hello.txt").unwrap_or_else(|erreur| {
+                panic!("Erreur de création du fichier : {:?}", erreur);
+            })
+        } else {
+            panic!("Erreur d'ouverture du fichier : {:?}", erreur);
+        }
+    });
+
+    // encore plus concis :
+    // Si la valeur de Result est la variante Ok, unwrap va retourner la valeur contenue dans le Ok. 
+    // Si le Result est la variante Err, unwrap va appeler la macro panic!
+    let f = File::open("hello.txt").unwrap(); 
+
+    // on peut aussi faire la même chose mais améliorer le message d'erreur
+    // à l'éxécution on aura le message d'erreur prévu par le compilateur et le notre :
+    let f = File::open("hello.txt").expect("Échec à l'ouverture de hello.txt");
+
+}
+
+use std::fs::File;
+use std::io::{Read};
+
+
+// test de propagation des erreurs
+// la fonction renvoi un result donc Ok ici une chaine ou Err ici la structure error du module
+fn lire_pseudo_depuis_fichier() -> Result<String, io::Error> {
+    let f = File::open("hello.txt");
+
+    let mut f = match f {
+        Ok(fichier) => fichier,
+        Err(e) => return Err(e),
+    };
+
+    let mut s = String::new();
+
+    match f.read_to_string(&mut s) { // ici on va renvoyer une des options Ok ou Err (pas la chaine directement)
+        Ok(_) => Ok(s),
+        Err(e) => Err(e),
+    } // on ne met pas le ; pour renvoyer la valeur
+}
+
+fn test_result_propagation(){
+    let pseudo = lire_pseudo_depuis_fichier().unwrap();
+}
+
+fn lire_pseudo_depuis_fichier2() -> Result<String, io::Error> {
+    // si il n'y a pas d'erreur on récupère le fichier dans f
+    // si il y a une erreur on quitte la fonction et on retourne l'erreur
+    let mut f = File::open("hello.txt")?; 
+
+    let mut s = String::new();
+    // là on lit le fichier si il y a une erreur on quitte la fonction avec l'erreur
+    // sinon on a la chaine lue dans s
+    f.read_to_string(&mut s)?;
+    Ok(s) // on quitte la fonction avec en renvoyant l'option Ok avec sa valeur qui est la chaine lue
+}
+
+// et encore plus concis :
+
+fn lire_pseudo_depuis_fichier3() -> Result<String, io::Error> {
+    let mut s = String::new();
+    // on peut tout mettre sur une seule ligne
+    File::open("hello.txt")?.read_to_string(&mut s)?;
+    Ok(s)
+}
+
+use std::fs;
+
+fn lire_pseudo_depuis_fichier4(s: &str) -> Result<String, io::Error> {
+    fs::read_to_string(s) // lis le contenu du fichier et renvoi soit la chaine soit l'erreur
+}
+
+fn dernier_caractere_de_la_premiere_ligne(texte: &str) -> Option<char> {
+    // texte.lines() : crée un itérateur sur les lignes du fichier
+    // .next() : renvoi soit la premiere ligne soit None
+    // ? : Renvoi None si next() renvoi None et termine la fonction, ou renvoi la chaine
+    // .chars() retourne un intérateur sur les caractères de la chaine
+    // .last() retourne le dernier caratère
+    texte.lines().next()?.chars().last()
+}
+
+fn test_result_propagation_avec_point_interrogation(){
+    //let pseudo = lire_pseudo_depuis_fichier2().unwrap();
+    //let pseudo = lire_pseudo_depuis_fichier3().unwrap();
+
+    let pseudo = lire_pseudo_depuis_fichier4("C:\\rust\\rust\\src\\tests\\pseudo.txt").unwrap();
+    println!("{pseudo}");
+    println!("{:?}",dernier_caractere_de_la_premiere_ligne(&pseudo));
 }
 
 fn main() {
@@ -587,4 +828,9 @@ fn main() {
     test_if_let();
     test_vecteurs();
     test_string();
+    test_table_de_hachage();
+    test_panic();
+    //test_result();
+    //test_result_propagation();
+    test_result_propagation_avec_point_interrogation();
 }
