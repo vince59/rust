@@ -805,6 +805,82 @@ fn test_result_propagation_avec_point_interrogation(){
     println!("{:?}",dernier_caractere_de_la_premiere_ligne(&pseudo));
 }
 
+#[derive(Debug)]
+struct Point<T> { // structure générique <T> indique que la structure varie en fonction de T, T c'est le nom du type générique
+    x: T, // on deux attributs x et y de n'importe quel type (mais du même type ...)
+    y: T,
+}
+
+#[derive(Debug)]
+struct Point2<T,U> { // structure générique <T,U> indique que la structure varie en fonction de T et de U
+    x: T, // on deux attributs x et y qui peuvent être de type différents
+    y: U,
+}
+
+fn test_structure_generique(){
+    
+    let entiers = Point { x: 5, y: 10 }; // on crée une instance de la structure avec des entiers 
+    let flottants = Point { x: 1.0, y: 4.0 }; // ou des flotants par exemple
+
+    println!("{:?}",flottants);
+
+    let mixe1 = Point2 { x: 5, y: 'a' }; // on crée une instance de la structure avec un mixe de valeurs
+    let mixe2 = Point2 { x: 7, y: 4.2 }; 
+
+    println!("{:?}",mixe1);
+}
+
+impl<T> Point<T> { // on implémente la structure Point en y ajoutant la fonction qui retourne l'attribut x
+// la fonction x est disponible dans toutes les instances de Point
+    fn x(&self) -> &T {
+        &self.x
+    }
+}
+
+impl Point<f32> { // on implémente la fonction distance_de_lorigine mais que pour le type f32 
+    // si l'instance de Point n'est pas de type f32 cette fonction n'est pas disponible :
+    fn distance_depuis_lorigine(&self) -> f32 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+
+fn test_fonction_generique_structure(){
+    let p = Point { x: 5, y: 10 };
+    println!("p.x = {}", p.x());
+    //println!("p.x = {}", p.distance_depuis_lorigine()); // Plante car pas de type f32
+
+    let p = Point { x: 5.2, y: 10.8 };
+    println!("p.x = {}", p.x());
+    println!("p.x = {}", p.distance_depuis_lorigine());
+}
+
+struct Point3<X1, Y1> {
+    x: X1,
+    y: Y1,
+}
+
+impl<X1, Y1> Point3<X1, Y1> { // on implémente Point3 en fonction des types génériques X1 et Y1
+    // on ajoute la fonction générique melange qui dépend des types génériques X2 et Y2
+    // elle prend en paramètre une instance de la stucture Point3 construite avec les types X2 et Y2 
+    // (on est pas obligé de leur donner le même nom que dans la définition de la structure)
+    // la fonction melange retourne une instance de Point3 avce les types génériques X2 et Y2
+    fn melange<X2, Y2>(self, other: Point3<X2, Y2>) -> Point3<X1, Y2> {
+        Point3 { // ici on retourne une instance de Point3
+            x: self.x,
+            y: other.y,
+        }
+    }
+}
+
+fn test_fonction_generique_structure2() {
+    let p1 = Point3 { x: 5, y: 10.4 };
+    let p2 = Point3 { x: "Hello", y: 'c' };
+
+    let p3 = p1.melange(p2);
+
+    println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+}
+
 fn main() {
     test_condition();
     test_expression();
@@ -833,4 +909,7 @@ fn main() {
     //test_result();
     //test_result_propagation();
     test_result_propagation_avec_point_interrogation();
+    test_structure_generique();
+    test_fonction_generique_structure();
+    test_fonction_generique_structure2();
 }
