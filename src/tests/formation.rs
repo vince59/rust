@@ -585,6 +585,8 @@ fn test_string() {
         // itérer sur les caractères de la chaine (utf8)
         println!("{}", c);
     }
+    let s = 24589.to_string(); // Tous les types qui implémente Display implémente aussi ToString et donc la méthode to_string
+    println!("{s}");
 }
 
 fn test_table_de_hachage() {
@@ -706,7 +708,8 @@ fn test_result() {
                 Ok(fc) => fc, // si la création est ok on retourne le gestionnaire de fichier
                 Err(e) => panic!("Erreur de création du fichier : {:?}", e), // la création peut aussi planter
             },
-            autre_erreur => { // si c'est un autre problème on s'arrête et on affiche l'erreur
+            autre_erreur => {
+                // si c'est un autre problème on s'arrête et on affiche l'erreur
                 panic!("Erreur d'ouverture du fichier : {:?}", autre_erreur)
             }
         },
@@ -724,19 +727,17 @@ fn test_result() {
     });
 
     // encore plus concis :
-    // Si la valeur de Result est la variante Ok, unwrap va retourner la valeur contenue dans le Ok. 
+    // Si la valeur de Result est la variante Ok, unwrap va retourner la valeur contenue dans le Ok.
     // Si le Result est la variante Err, unwrap va appeler la macro panic!
-    let f = File::open("hello.txt").unwrap(); 
+    let f = File::open("hello.txt").unwrap();
 
     // on peut aussi faire la même chose mais améliorer le message d'erreur
     // à l'éxécution on aura le message d'erreur prévu par le compilateur et le notre :
     let f = File::open("hello.txt").expect("Échec à l'ouverture de hello.txt");
-
 }
 
 use std::fs::File;
-use std::io::{Read};
-
+use std::io::Read;
 
 // test de propagation des erreurs
 // la fonction renvoi un result donc Ok ici une chaine ou Err ici la structure error du module
@@ -750,20 +751,21 @@ fn lire_pseudo_depuis_fichier() -> Result<String, io::Error> {
 
     let mut s = String::new();
 
-    match f.read_to_string(&mut s) { // ici on va renvoyer une des options Ok ou Err (pas la chaine directement)
+    match f.read_to_string(&mut s) {
+        // ici on va renvoyer une des options Ok ou Err (pas la chaine directement)
         Ok(_) => Ok(s),
         Err(e) => Err(e),
     } // on ne met pas le ; pour renvoyer la valeur
 }
 
-fn test_result_propagation(){
+fn test_result_propagation() {
     let pseudo = lire_pseudo_depuis_fichier().unwrap();
 }
 
 fn lire_pseudo_depuis_fichier2() -> Result<String, io::Error> {
     // si il n'y a pas d'erreur on récupère le fichier dans f
     // si il y a une erreur on quitte la fonction et on retourne l'erreur
-    let mut f = File::open("hello.txt")?; 
+    let mut f = File::open("hello.txt")?;
 
     let mut s = String::new();
     // là on lit le fichier si il y a une erreur on quitte la fonction avec l'erreur
@@ -796,55 +798,58 @@ fn dernier_caractere_de_la_premiere_ligne(texte: &str) -> Option<char> {
     texte.lines().next()?.chars().last()
 }
 
-fn test_result_propagation_avec_point_interrogation(){
+fn test_result_propagation_avec_point_interrogation() {
     //let pseudo = lire_pseudo_depuis_fichier2().unwrap();
     //let pseudo = lire_pseudo_depuis_fichier3().unwrap();
 
     let pseudo = lire_pseudo_depuis_fichier4("C:\\rust\\rust\\src\\tests\\pseudo.txt").unwrap();
     println!("{pseudo}");
-    println!("{:?}",dernier_caractere_de_la_premiere_ligne(&pseudo));
+    println!("{:?}", dernier_caractere_de_la_premiere_ligne(&pseudo));
 }
 
 #[derive(Debug)]
-struct Point<T> { // structure générique <T> indique que la structure varie en fonction de T, T c'est le nom du type générique
+struct Point<T> {
+    // structure générique <T> indique que la structure varie en fonction de T, T c'est le nom du type générique
     x: T, // on deux attributs x et y de n'importe quel type (mais du même type ...)
     y: T,
 }
 
 #[derive(Debug)]
-struct Point2<T,U> { // structure générique <T,U> indique que la structure varie en fonction de T et de U
+struct Point2<T, U> {
+    // structure générique <T,U> indique que la structure varie en fonction de T et de U
     x: T, // on deux attributs x et y qui peuvent être de type différents
     y: U,
 }
 
-fn test_structure_generique(){
-    
+fn test_structure_generique() {
     let entiers = Point { x: 5, y: 10 }; // on crée une instance de la structure avec des entiers 
     let flottants = Point { x: 1.0, y: 4.0 }; // ou des flotants par exemple
 
-    println!("{:?}",flottants);
+    println!("{:?}", flottants);
 
     let mixe1 = Point2 { x: 5, y: 'a' }; // on crée une instance de la structure avec un mixe de valeurs
-    let mixe2 = Point2 { x: 7, y: 4.2 }; 
+    let mixe2 = Point2 { x: 7, y: 4.2 };
 
-    println!("{:?}",mixe1);
+    println!("{:?}", mixe1);
 }
 
-impl<T> Point<T> { // on implémente la structure Point en y ajoutant la fonction qui retourne l'attribut x
-// la fonction x est disponible dans toutes les instances de Point
+impl<T> Point<T> {
+    // on implémente la structure Point en y ajoutant la fonction qui retourne l'attribut x
+    // la fonction x est disponible dans toutes les instances de Point
     fn x(&self) -> &T {
         &self.x
     }
 }
 
-impl Point<f32> { // on implémente la fonction distance_de_lorigine mais que pour le type f32 
+impl Point<f32> {
+    // on implémente la fonction distance_de_lorigine mais que pour le type f32
     // si l'instance de Point n'est pas de type f32 cette fonction n'est pas disponible :
     fn distance_depuis_lorigine(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }
 }
 
-fn test_fonction_generique_structure(){
+fn test_fonction_generique_structure() {
     let p = Point { x: 5, y: 10 };
     println!("p.x = {}", p.x());
     //println!("p.x = {}", p.distance_depuis_lorigine()); // Plante car pas de type f32
@@ -859,13 +864,15 @@ struct Point3<X1, Y1> {
     y: Y1,
 }
 
-impl<X1, Y1> Point3<X1, Y1> { // on implémente Point3 en fonction des types génériques X1 et Y1
+impl<X1, Y1> Point3<X1, Y1> {
+    // on implémente Point3 en fonction des types génériques X1 et Y1
     // on ajoute la fonction générique melange qui dépend des types génériques X2 et Y2
-    // elle prend en paramètre une instance de la stucture Point3 construite avec les types X2 et Y2 
+    // elle prend en paramètre une instance de la stucture Point3 construite avec les types X2 et Y2
     // (on est pas obligé de leur donner le même nom que dans la définition de la structure)
     // la fonction melange retourne une instance de Point3 avce les types génériques X2 et Y2
     fn melange<X2, Y2>(self, other: Point3<X2, Y2>) -> Point3<X1, Y2> {
-        Point3 { // ici on retourne une instance de Point3
+        Point3 {
+            // ici on retourne une instance de Point3
             x: self.x,
             y: other.y,
         }
@@ -879,6 +886,277 @@ fn test_fonction_generique_structure2() {
     let p3 = p1.melange(p2);
 
     println!("p3.x = {}, p3.y = {}", p3.x, p3.y);
+}
+
+struct Personne {
+    nom: String,
+    age: i32,
+}
+trait PeutCommuniquer {
+    // nom de l'interface (un adjectif par exemple) c'est une caractéristique
+    fn parler(&self) -> String; // Prototype qui devra être implémenté
+
+    fn chanter(&self) -> String {
+        // une autre fonction à implémenter mais avec un comportement par défaut
+        String::from("la la la ...")
+    }
+}
+
+impl PeutCommuniquer for Personne {
+    // On implémente le trait PeutCommuniquer pour la structure Personne
+    fn parler(&self) -> String {
+        format!("Bonjour je suis {} et j'ai {} ans", self.nom, self.age)
+    }
+}
+
+fn communiquer(individu: &impl PeutCommuniquer) {
+    // on attend un paramètre on sait juste qu'il implémente le trait PeutCommuniquer
+    println!(
+        "je te parle mais je ne te connais pas ! {}",
+        individu.parler()
+    );
+    //individu.nom="toto"; // on ne peut pas faire ça car on ne connais que les fonction du trait
+}
+
+// Cette syntaxe est équivallente mais plus verbeuse
+fn communiquer2<T: PeutCommuniquer>(individu: &T) {
+    println!(
+        "je te parle mais je ne te connais pas ! {}",
+        individu.parler()
+    );
+}
+
+// on peut imposer que les deux paramètres de la fonction implémente chacun le trait mais avec cette syntaxe
+// les deux paramètres peuvent être de type différents :
+
+fn communiquer_avec(individu1: &impl PeutCommuniquer, individu2: &impl PeutCommuniquer) {
+    println!(
+        "ils parlent ensemble : {}, {}",
+        individu1.parler(),
+        individu2.parler()
+    );
+}
+
+// si on veux les forcer à être du même type il faut alors utiliser cette syntaxe :
+
+fn communiquer_avec2<T: PeutCommuniquer>(individu1: &T, individu2: &T) {
+    println!(
+        "ils parlent ensemble : \n{}, \n{}",
+        individu1.parler(),
+        individu2.parler()
+    );
+}
+
+trait PeutBouger {
+    fn avancer(&self) -> String; // Prototype qui devra être implémenté
+}
+
+impl PeutBouger for Personne {
+    // On implémente le trait PeutBouger pour la structure Personne
+    fn avancer(&self) -> String {
+        String::from("Je bouge !")
+    }
+}
+
+// une fonction peut demander à ce que les types implémentent plusieurs traits
+
+fn parler_en_marchant(individu: &(impl PeutBouger + PeutCommuniquer)) {
+    println!(
+        "Je parle ! {} et en même temps {}",
+        individu.parler(),
+        individu.avancer()
+    );
+}
+
+// la même avec des traits lié sur des types génériques
+
+fn parler_en_marchant2<T: PeutBouger + PeutCommuniquer>(individu: &T) {
+    println!(
+        "Je parle ! {} et en même temps {}",
+        individu.parler(),
+        individu.avancer()
+    );
+}
+
+// la même avec la syntaxe where
+
+fn parler_en_marchant_avec<T, U>(individu1: &T, individu2: &U)
+where
+    T: PeutBouger + PeutCommuniquer,
+    U: PeutBouger + PeutCommuniquer,
+{
+    println!(
+        "On parle! {}\n{}\n et en même temps on {}\n{}",
+        individu1.parler(),
+        individu2.parler(),
+        individu1.avancer(),
+        individu2.avancer()
+    );
+}
+
+// cette fonction retourne un objet d'un type que le programme appelalnt ne connaitra pas
+// par contre il saura qu'il implémente le trait PeutCommuniquer
+// c'est souvent utiliser pour les itérateurs
+
+fn retourne_un_truc_qui_parle() -> impl PeutCommuniquer {
+    Personne {
+        nom: String::from("Bob"),
+        age: 45,
+    }
+}
+
+use std::env;
+
+fn test_trait() {
+    let p = Personne {
+        nom: String::from("Vincent"),
+        age: 10,
+    };
+
+    let p2 = Personne {
+        nom: String::from("Toto"),
+        age: 30,
+    };
+
+    println!("{}", p.parler());
+    println!("{}", p.chanter());
+    communiquer(&p);
+    communiquer2(&p);
+    communiquer_avec(&p, &p2);
+    communiquer_avec2(&p, &p2);
+    parler_en_marchant(&p);
+    parler_en_marchant2(&p);
+    parler_en_marchant_avec(&p, &p2);
+}
+
+// Récupération des arguments de la ligne de commande
+fn test_argument_ligne_de_commande() {
+    let args: Vec<String> = env::args().collect(); // Dans un vecteur
+    println!("{:?}", args);
+    let executable = &args[0];
+    println!("Nom exécutable {:?}", executable);
+}
+
+fn test_lecture_fichier_texte() {
+    let nom_fichier = "C:\\rust\\rust\\src\\tests\\pseudo.txt";
+    let contenu = fs::read_to_string(nom_fichier)
+        .expect("Quelque chose s'est mal passé lors de la lecture du fichier");
+
+    println!("Dans le texte :\n{}", contenu);
+}
+
+fn retour_2_entier() -> (i16, i16) {
+    (10, 20)
+}
+fn test_retour_multiple() {
+    let (x, y) = retour_2_entier();
+    println!("x={x},y={y}");
+}
+
+fn un_sur(i: i16) -> Result<f32, &'static str> {
+    if i == 0 {
+        return Err("Division par 0 !");
+    }
+    //let r : f32 = ;
+    Ok(1.0 / f32::from(i))
+}
+
+use std::process;
+
+fn test_erreur() {
+    let z = un_sur(3).unwrap_or_else(|err| {
+        println!("Erreur : {}", err);
+        process::exit(1);
+    });
+    println!("Z={z}");
+}
+
+use std::thread;
+use std::time::Duration;
+
+fn test_sleep() {
+    //thread::sleep(Duration::from_secs(2)); // on attend deux sec
+}
+
+fn test_fermeture_lambda() {
+    fn ajouter_un_v1(x: u32) -> u32 {
+        // frontion qui ajoute 1
+        x + 1
+    }
+    let ajouter_un_v2 = |x: u32| -> u32 { x + 1 }; // une fermeture (lambda ou fonction anonyme) avec déclaration des types
+    let ajouter_un_v3 = |x| x + 1; // le type de x dépend de l'usage de la fermeture mais une fois déterminé on ne peut pas le changer
+    let ajouter_un_v4 = |x| x + 1.0;
+    ajouter_un_v3(1);
+    ajouter_un_v4(1.0);
+    let fermeture_exemple = |x| x;
+
+    let s = fermeture_exemple(String::from("hello"));
+    // let n = fermeture_exemple(5); ne compile pas car le paramètre x est une chaine suite au 1er appel
+
+    // les fermetures ont accès aux variables de la portée :
+
+    let x: i32 = 4;
+
+    let egal_a_x = |z| {
+        z == x // la fermeture à accès à x qui ne fait pas parti de la fonction
+    };
+
+    let y = 4;
+    
+    println!("x({})=y({}) ? : {}", x, y, egal_a_x(y));
+    let x=5; // Même si on redéfini x x garde la valeur initiale 4
+    println!("x({})=y({}) ? : {}", x, y, egal_a_x(y));
+
+    let x = vec![1, 2, 3];
+    let egal_a_x = move |z| z == x; // avec le mot clé move la lambda détruit les variables de la portée qu'elle utilise 
+    //println!("On ne peut pas utiliser x ici : {:?}", x); // x a été détruit dans la fermeture
+    let y = vec![1, 2, 3];
+   println!("---->{}",egal_a_x(y));
+}
+
+// utilisation d'une fermeture dans une structure
+struct Cache<T>
+// déclaration d'une structure qui dépend de T
+where
+    T: Fn(u32) -> u32, // T est une fermeture qui prend un entier et retourne un entier
+                       // Fn est le nom du trait à implémenter
+{
+    calcul: T,           // nom la variable qui identifie la fermeture
+    valeur: Option<u32>, // résultat retourné par la fermeture (Some ou None)
+}
+
+impl<T> Cache<T>
+// implémentation du trait Fn dans la structure et du contructure new
+where
+    T: Fn(u32) -> u32,
+{
+    fn new(calcul: T) -> Cache<T> {
+        Cache {
+            calcul,
+            valeur: None,
+        }
+    }
+
+    fn valeur(&mut self, arg: u32) -> u32 {
+        // ajout de la fonction valeur qui renvoi self.valeur si valeur!=None
+        match self.valeur {
+            Some(v) => v,
+            None => {
+                let v = (self.calcul)(arg); // et si valeur=None on appel la fermeture self.calcul
+                self.valeur = Some(v); // et on stocke le résultat dans self.valeur
+                v // et on retourne le résultat
+            }
+        }
+    }
+}
+
+fn test_fermeture_structure() {
+    // ici on instancie la stucture en aapelant le constructeur en donnant en paramètre la fermeture
+    let mut mon_calcul = Cache::new(|nombre| nombre + 1);
+
+    println!("Appel 1 : {}", mon_calcul.valeur(10)); // la fermeture est exécutée
+    println!("Appel 2 : {}", mon_calcul.valeur(30)); // le résultat est en cache on renvoi la valeur
+    println!("Appel 2 : {}", mon_calcul.valeur(10)); // idem (même si la valeur du paramètre à changé)
 }
 
 fn main() {
@@ -912,4 +1190,12 @@ fn main() {
     test_structure_generique();
     test_fonction_generique_structure();
     test_fonction_generique_structure2();
+    test_trait();
+    test_argument_ligne_de_commande();
+    test_lecture_fichier_texte();
+    test_retour_multiple();
+    test_erreur();
+    test_sleep();
+    test_fermeture_lambda();
+    test_fermeture_structure();
 }
