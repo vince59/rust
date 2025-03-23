@@ -151,6 +151,8 @@ fn test_tableau() {
     x[1][2] = 70;
     x[1][3] = 80;
     println!("{x:?}");
+    let tab: [i32; 10] = std::array::from_fn(|i| (i + 1) as i32);
+    println!("truc = {:?}",&tab[3..7]); // permet de récupérer les indices de 3 à 7
 }
 
 fn zz(x: i32) -> i32 {
@@ -1159,15 +1161,147 @@ fn test_fermeture_structure() {
     println!("Appel 2 : {}", mon_calcul.valeur(10)); // idem (même si la valeur du paramètre à changé)
 }
 
-fn test_iterateur() {
+fn test_iterateur_map() {
     let v1 = vec![1, 2, 3];
     let v1_iter = v1.iter(); // on récupère l'itérateur sans l'appeler
     for val in v1_iter {
         println!("On a : {}", val);
     }
-    let total : i32 = v1.iter().sum(); // on ne peut pas réutiliser v1_iter car l'itération consomme l'itérateur
+    let v1_iter2 = v1.iter();
+    let total: i32 = v1_iter2.sum(); // on ne peut pas réutiliser v1_iter car l'itération consomme l'itérateur
     println!("Total : {}", total);
+    let min = v1.iter().min(); // idem, il faut redemander un nouvel itérateur
+    println!("Min : {:?}", min);
+
+    v1.iter().map(|x| println!("x={}", x + 1)); // ici la fonction anonyme ne sera pas appelée
+
+    let v2: Vec<_> = v1
+        .iter()
+        .map(|x| {
+            println!("dans la fonction anonyme : {}", x);
+            x + 1
+        })
+        .collect(); // le collect va appeler la fonction anonyme pour chaque occurrence
+    println!("V2 : {:?}", v2);
+}
+
+#[derive(Debug)] // permet d'utiliser debug ou {:?} dans le println! (implémenter automatiquement les traits)
+struct Chaussure {
+    pointure: u32,
+    style: String,
+}
+
+fn test_iterateur_filter() {
+    let chaussures = vec![
+        Chaussure {
+            pointure: 10,
+            style: String::from("baskets"),
+        },
+        Chaussure {
+            pointure: 13,
+            style: String::from("sandale"),
+        },
+        Chaussure {
+            pointure: 10,
+            style: String::from("bottes"),
+        },
+    ];
+
+    let a_ma_pointure: Vec<Chaussure> = chaussures
+        .into_iter()
+        .filter(|s| s.pointure == 10) // Applique le filtre
+        .collect();
+    println!("Chaussures à ma pointure : {:?}", a_ma_pointure);
+
+}
+
+
+struct Compteur {
+    compteur: u32,
+}
+
+impl Compteur {
+    fn new() -> Compteur {
+        Compteur { compteur: 0 }
+    }
+}
+
+impl Iterator for Compteur {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> { // implementation de next qui ici compte j'usqu'à 5 et s'arrête
+        if self.compteur < 5 {
+            self.compteur += 1;
+            Some(self.compteur)
+        } else {
+            None
+        }
+    }
+}
+
+use std::iter::zip;
+
+fn test_iterateur_custom(){
+    let mut compteur = Compteur::new();
+    println!("{:?}",compteur.next()); // on a déjà compté jusque 1
+    compteur.for_each(|x| {println!("x={}",x);}); // donc là on reprend de 2 à 5
+
+    let test_zip = zip(Compteur::new(),Compteur::new());
+
+    test_zip.for_each(|(x,y)| {println!("test zip x={}, y={}",x,y);});
+
+    let somme: u32 = Compteur::new() // on instancie un premier iterateur compteur
+            .zip(Compteur::new().skip(1))// on instancie le second (en zappant le premier élément) et on en crée un 3 ème retourné par zip qui itère sur des tuples : (valeur du premeier compteur, valeur du second) et termine son itération si une des valeurs du tuple est None
+            .map(|(a, b)| a * b) // pour chaque occurrence du tuple on multiplie les valeurs du tuple entre elles et on retourne le résultat de la multiplication
+            .filter(|x| x % 3 == 0)//et on ne garde que les valeurs divisibles par 3 
+            .sum(); // et on somme le résultat du filtre
+    println!("{}",somme);
+}
+
+fn test_thread(){
+    let manipulateur = thread::spawn(|| { // contenu du thread
+        for i in 1..10 {
+            println!("Bonjour n°{} à partir de la nouvelle tâche !", i);
+            thread::sleep(Duration::from_millis(1));
+        }
+    });
+
+    for i in 1..5 {
+        println!("Bonjour n°{} à partir de la tâche principale !", i);
+        thread::sleep(Duration::from_millis(1));
+    }
+    manipulateur.join().unwrap(); // force a attendre que les tâches soit terminées
+
+
+    let v = vec![1, 2, 3];
+
+    let manipulateur = thread::spawn(move || { // avec move le thread prend possession de v, si on met pas move le compilateur ne laisse pas passer car on pourrait dans la tache principale supprimer v alors que le threau l'utilise encore
+        println!("Voici un vecteur : {:?}", v);
+    });
+
+    manipulateur.join().unwrap();
+}
+
+use std::sync::mpsc;
+
+fn test_thread_sender_reciever(){
+    let (tx, rx) = mpsc::channel(); // on crée un émetteur et un recever
+
+    thread::spawn(move || { // avec move le thread prend possession du sender
+        let valeur = String::from("salut");
+        let valeur = String::from("salut");
+        println!("La tâche envoie : {valeur}");
+        thread::sleep(Duration::from_secs(2));
+        tx.send(valeur).unwrap(); // on envoi la valeur mais c'est le récepteur qui en prend possession on ne peut plus utiliser valeur après
+        thread::sleep(Duration::from_secs(2));
+        tx.send(valeur).unwrap();
+    });
+
+    let recu = rx.recv().unwrap(); // le programme se bloque en attendant la réponse
+    println!("Le programme principal a reçu: {}", recu);
+    let mess = rx.try_recv().unwrap(); // le programme ne se bloque pas en attendant la réponse
     
+    println!("{}",mess);
 }
 
 fn main() {
@@ -1209,5 +1343,9 @@ fn main() {
     test_sleep();
     test_fermeture_lambda();
     test_fermeture_structure();
-    test_iterateur();
+    test_iterateur_map();
+    test_iterateur_filter();
+    test_iterateur_custom();
+    test_thread();
+    test_thread_sender_reciever();
 }
