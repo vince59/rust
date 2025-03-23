@@ -1,11 +1,11 @@
 use axum::extract::State;
 use axum::http::StatusCode;
-use axum::{response::Html, routing::get, Router,extract::Form};
-use minijinja::{context, Environment};
+use axum::{Router, extract::Form, response::Html, routing::get};
+use chrono::{Days, Months, prelude::*};
+use minijinja::{Environment, context};
 use serde::Deserialize;
 use std::sync::Arc;
 use std::time::SystemTime;
-use chrono::{prelude::*, Days, Months};
 
 struct AppState {
     env: Environment<'static>,
@@ -21,10 +21,16 @@ async fn main() {
         .unwrap();
     env.add_template("home", include_str!("../views/home.jinja"))
         .unwrap();
-    env.add_template("planning.create", include_str!("../views/planning/create.jinja"))
-        .unwrap();
-    env.add_template("planning.result", include_str!("../views/planning/result.jinja"))
-        .unwrap();
+    env.add_template(
+        "planning.create",
+        include_str!("../views/planning/create.jinja"),
+    )
+    .unwrap();
+    env.add_template(
+        "planning.result",
+        include_str!("../views/planning/result.jinja"),
+    )
+    .unwrap();
 
     // pass env to handlers via state
     let app_state = Arc::new(AppState { env });
@@ -32,7 +38,10 @@ async fn main() {
     // Ajout des routes
     let app = Router::new()
         .route("/", get(controller_home))
-        .route("/planning", get(controller_planning_create).post(controller_planning_generate))
+        .route(
+            "/planning",
+            get(controller_planning_create).post(controller_planning_generate),
+        )
         .with_state(app_state);
 
     // run it
@@ -55,7 +64,9 @@ async fn controller_home(State(state): State<Arc<AppState>>) -> Result<Html<Stri
     Ok(Html(rendered))
 }
 
-async fn controller_planning_create(State(state): State<Arc<AppState>>) -> Result<Html<String>, StatusCode> {
+async fn controller_planning_create(
+    State(state): State<Arc<AppState>>,
+) -> Result<Html<String>, StatusCode> {
     let template = state.env.get_template("planning.create").unwrap();
 
     let rendered = template
@@ -70,13 +81,16 @@ async fn controller_planning_create(State(state): State<Arc<AppState>>) -> Resul
 #[derive(Deserialize, Debug)]
 #[allow(dead_code)]
 struct Input {
-    nbdays : i32,
-    strdate : String,
-    enddate : String,
+    nbdays: i32,
+    strdate: String,
+    enddate: String,
 }
 
-async fn controller_planning_generate(State(state): State<Arc<AppState>>,Form(mut input): Form<Input>) -> Result<Html<String>, StatusCode> {
-    input.nbdays+=7;
+async fn controller_planning_generate(
+    State(state): State<Arc<AppState>>,
+    Form(mut input): Form<Input>,
+) -> Result<Html<String>, StatusCode> {
+    input.nbdays += 7;
 
     dbg!(&input);
     let template = state.env.get_template("planning.result").unwrap();
@@ -85,10 +99,10 @@ async fn controller_planning_generate(State(state): State<Arc<AppState>>,Form(mu
     let curr_date = NaiveDate::parse_from_str(&input.strdate, "%Y-%m-%d").unwrap();
     println!("Parse Date from String: {curr_date:?}");
     let day_number = curr_date.weekday().number_from_monday();
-    println!("jour: {}",day_number);
+    println!("jour: {}", day_number);
     let new_date = curr_date.checked_add_days(Days::new(10));
     println!("Add days and months to a Date/Time: {new_date:?}");
-    
+
     let rendered = template
         .render(context! {
             title => "Content",

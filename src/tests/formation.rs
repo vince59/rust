@@ -152,7 +152,7 @@ fn test_tableau() {
     x[1][3] = 80;
     println!("{x:?}");
     let tab: [i32; 10] = std::array::from_fn(|i| (i + 1) as i32);
-    println!("truc = {:?}",&tab[3..7]); // permet de récupérer les indices de 3 à 7
+    println!("truc = {:?}", &tab[3..7]); // permet de récupérer les indices de 3 à 7
 }
 
 fn zz(x: i32) -> i32 {
@@ -226,6 +226,13 @@ fn test_boucle() {
         println!("{} !", nombre);
     }
     println!("DÉCOLLAGE !!!");
+
+    // boucle for avec destructuration :
+    let v = vec!['a', 'b', 'c'];
+
+    for (indice, valeur) in v.iter().enumerate() {
+        println!("{} est à l'indice {}", valeur, indice);
+    }
 }
 
 fn prendre_possetion(texte: String) {
@@ -472,6 +479,28 @@ fn test_if_let() {
     match une_valeur_u8 {
         Some(max) => println!("Le maximum est réglé sur {}", max),
         _ => (),
+    }
+
+    // autre exemple avec un autre motif:
+    let t = (8, 3);
+    if let (x, 3) = t {
+        println!("j'ai 3 dans le 2ème élément du tuple et {x} dans le 1er");
+    }
+    if let (_, 3) = t {
+        println!("j'ai 3 dans le 2ème élément du tuple");
+    }
+}
+
+fn test_while_let() {
+    let mut pile = Vec::new();
+
+    pile.push(1);
+    pile.push(2);
+    pile.push(3);
+
+    while let Some(donnee_du_haut) = pile.pop() {
+        // tant que pile.pop retourne Some
+        println!("pop : {}", donnee_du_haut); // on affiche
     }
 }
 
@@ -1212,9 +1241,7 @@ fn test_iterateur_filter() {
         .filter(|s| s.pointure == 10) // Applique le filtre
         .collect();
     println!("Chaussures à ma pointure : {:?}", a_ma_pointure);
-
 }
-
 
 struct Compteur {
     compteur: u32,
@@ -1229,7 +1256,8 @@ impl Compteur {
 impl Iterator for Compteur {
     type Item = u32;
 
-    fn next(&mut self) -> Option<Self::Item> { // implementation de next qui ici compte j'usqu'à 5 et s'arrête
+    fn next(&mut self) -> Option<Self::Item> {
+        // implementation de next qui ici compte j'usqu'à 5 et s'arrête
         if self.compteur < 5 {
             self.compteur += 1;
             Some(self.compteur)
@@ -1241,25 +1269,30 @@ impl Iterator for Compteur {
 
 use std::iter::zip;
 
-fn test_iterateur_custom(){
+fn test_iterateur_custom() {
     let mut compteur = Compteur::new();
-    println!("{:?}",compteur.next()); // on a déjà compté jusque 1
-    compteur.for_each(|x| {println!("x={}",x);}); // donc là on reprend de 2 à 5
+    println!("{:?}", compteur.next()); // on a déjà compté jusque 1
+    compteur.for_each(|x| {
+        println!("x={}", x);
+    }); // donc là on reprend de 2 à 5
 
-    let test_zip = zip(Compteur::new(),Compteur::new());
+    let test_zip = zip(Compteur::new(), Compteur::new());
 
-    test_zip.for_each(|(x,y)| {println!("test zip x={}, y={}",x,y);});
+    test_zip.for_each(|(x, y)| {
+        println!("test zip x={}, y={}", x, y);
+    });
 
     let somme: u32 = Compteur::new() // on instancie un premier iterateur compteur
-            .zip(Compteur::new().skip(1))// on instancie le second (en zappant le premier élément) et on en crée un 3 ème retourné par zip qui itère sur des tuples : (valeur du premeier compteur, valeur du second) et termine son itération si une des valeurs du tuple est None
-            .map(|(a, b)| a * b) // pour chaque occurrence du tuple on multiplie les valeurs du tuple entre elles et on retourne le résultat de la multiplication
-            .filter(|x| x % 3 == 0)//et on ne garde que les valeurs divisibles par 3 
-            .sum(); // et on somme le résultat du filtre
-    println!("{}",somme);
+        .zip(Compteur::new().skip(1)) // on instancie le second (en zappant le premier élément) et on en crée un 3 ème retourné par zip qui itère sur des tuples : (valeur du premeier compteur, valeur du second) et termine son itération si une des valeurs du tuple est None
+        .map(|(a, b)| a * b) // pour chaque occurrence du tuple on multiplie les valeurs du tuple entre elles et on retourne le résultat de la multiplication
+        .filter(|x| x % 3 == 0) //et on ne garde que les valeurs divisibles par 3
+        .sum(); // et on somme le résultat du filtre
+    println!("{}", somme);
 }
 
-fn test_thread(){
-    let manipulateur = thread::spawn(|| { // contenu du thread
+fn test_thread() {
+    let manipulateur = thread::spawn(|| {
+        // contenu du thread
         for i in 1..10 {
             println!("Bonjour n°{} à partir de la nouvelle tâche !", i);
             thread::sleep(Duration::from_millis(1));
@@ -1272,10 +1305,10 @@ fn test_thread(){
     }
     manipulateur.join().unwrap(); // force a attendre que les tâches soit terminées
 
-
     let v = vec![1, 2, 3];
 
-    let manipulateur = thread::spawn(move || { // avec move le thread prend possession de v, si on met pas move le compilateur ne laisse pas passer car on pourrait dans la tache principale supprimer v alors que le threau l'utilise encore
+    let manipulateur = thread::spawn(move || {
+        // avec move le thread prend possession de v, si on met pas move le compilateur ne laisse pas passer car on pourrait dans la tache principale supprimer v alors que le threau l'utilise encore
         println!("Voici un vecteur : {:?}", v);
     });
 
@@ -1284,24 +1317,486 @@ fn test_thread(){
 
 use std::sync::mpsc;
 
-fn test_thread_sender_reciever(){
+fn test_thread_sender_reciever() {
     let (tx, rx) = mpsc::channel(); // on crée un émetteur et un recever
 
-    thread::spawn(move || { // avec move le thread prend possession du sender
+    thread::spawn(move || {
+        // avec move le thread prend possession du sender
         let valeur = String::from("salut");
-        let valeur = String::from("salut");
+        let valeur2 = String::from("salut");
         println!("La tâche envoie : {valeur}");
         thread::sleep(Duration::from_secs(2));
         tx.send(valeur).unwrap(); // on envoi la valeur mais c'est le récepteur qui en prend possession on ne peut plus utiliser valeur après
         thread::sleep(Duration::from_secs(2));
-        tx.send(valeur).unwrap();
+        tx.send(valeur2).unwrap();
     });
 
     let recu = rx.recv().unwrap(); // le programme se bloque en attendant la réponse
-    println!("Le programme principal a reçu: {}", recu);
-    let mess = rx.try_recv().unwrap(); // le programme ne se bloque pas en attendant la réponse
-    
-    println!("{}",mess);
+    println!("Le programme principal a reçu: {}", recu); // une fois qu'on a reçu le message on en est propriétaire
+    let mess = rx.try_recv(); // le programme ne se bloque pas en attendant la réponse
+    match mess {
+        Ok(m) => println!("Le programme principal a reçu: {m}"),
+        _ => println!("Le program principal a lu mais il n'y avait rien à lire"),
+    }
+
+    // on peut faire une boucle d'attente :
+    let m = loop {
+        let mess = rx.try_recv(); // le programme ne se bloque pas en attendant la réponse
+        match mess {
+            Ok(ms) => break ms,
+            _ => {
+                println!("Le program principal a lu mais il n'y avait rien à lire");
+                thread::sleep(Duration::from_millis(500));
+            }
+        }
+    };
+    println!("Le programme principal a reçu: {m}");
+}
+
+fn test_thread_sender_reciever_iterateur() {
+    let (tx, rx) = mpsc::channel();
+
+    thread::spawn(move || {
+        let valeurs = vec![
+            String::from("salutations"),
+            String::from("à partir"),
+            String::from("de la"),
+            String::from("nouvelle tâche"),
+        ];
+
+        for valeur in valeurs {
+            tx.send(valeur).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    for recu in rx {
+        // on peut itérer sur le receveur
+        println!("On a reçu : {}", recu);
+    }
+}
+
+fn test_thread_multi_sender() {
+    let (tx, rx) = mpsc::channel();
+    let tx1 = tx.clone(); // clone le sender
+
+    // on démarre deux thread différents qui vont écrire avec le même sender
+    // donc le receveur va recevoir les messages deux senders
+
+    thread::spawn(move || {
+        let valeurs = vec![
+            String::from("salutations"),
+            String::from("à partir"),
+            String::from("de la"),
+            String::from("nouvelle tâche"),
+        ];
+
+        for valeur in valeurs {
+            tx1.send(valeur).unwrap(); // c'est le clone qui envoi le message
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    thread::spawn(move || {
+        let valeurs = vec![
+            String::from("encore plus"),
+            String::from("de messages"),
+            String::from("pour"),
+            String::from("vous"),
+        ];
+
+        for valeur in valeurs {
+            tx.send(valeur).unwrap();
+            thread::sleep(Duration::from_secs(1));
+        }
+    });
+
+    for recu in rx {
+        // on itère sur le receveur qui recoit les mesages des deux threads
+        println!("On a reçu : {}", recu);
+    }
+}
+
+use std::sync::{Arc, Mutex};
+
+fn test_thread_mutex() {
+    // une seule tâche qui modifie un compteur
+    let m = Mutex::new(5);
+    {
+        let mut nombre = m.lock().unwrap(); // on pose le verrou pour utiliser la valeur
+        *nombre = 6; // on modifie la variable
+    } // le verrou est libéré automatiquement à la sortie de la portée
+    println!("m = {:?}", m);
+
+    // plusieurs tâches qui modifie le même compteur
+    let compteur = Arc::new(Mutex::new(0)); // on crée un mutex sur une variable de type i32 et de valeur 0 et on met le mutex dans un compteur de référence (Arc pour gérer la concurrence d'accès)
+    let mut manipulateurs = vec![]; // on déclare un vecteur avec rien dedans pour l'instant
+
+    for _ in 0..10 {
+        // dix fois de suite
+        let compteur = Arc::clone(&compteur);
+        let manipulateur = thread::spawn(move || {
+            let mut nombre = compteur.lock().unwrap();
+            *nombre += 1;
+        }); // on instancie un thread qui va demander un lock sur le mutex compteur et qui ajoute 1 au compteur
+        manipulateurs.push(manipulateur); // on ajoute au vecteur le thread
+    }
+
+    for manipulateur in manipulateurs {
+        // on attends que tous les threads soient terminés
+        manipulateur.join().unwrap();
+    }
+
+    println!("Resultat : {}", *compteur.lock().unwrap()); // et on affiche le résultat le * permet de dérérencer et donc de récupérer le mutex plustôt que le Arc
+}
+
+// *** TESTS sur la POO
+
+pub trait Affichable {
+    // trait affichable
+    fn afficher(&self); // qui doit implémenter la fonction afficher
+}
+
+pub struct Ecran {
+    pub composants: Vec<Box<dyn Affichable>>, // une structure écran qui comprend un vecteur de "truc" Affichable (qui implémente le trait affichable)
+}
+
+impl Ecran {
+    // implémentation de écran pour ajouter la méthode exécuter
+    pub fn executer(&self) {
+        for composant in self.composants.iter() {
+            // on itère sur les composants et on appel leur méthode afficher
+            composant.afficher();
+        }
+    }
+}
+
+pub struct Bouton {
+    pub largeur: u32,
+    pub hauteur: u32,
+    pub libelle: String,
+}
+
+impl Affichable for Bouton {
+    fn afficher(&self) {
+        println!("Bouton !");
+    }
+}
+
+struct ListeDeroulante {
+    largeur: u32,
+    hauteur: u32,
+    options: Vec<String>,
+}
+
+impl Affichable for ListeDeroulante {
+    fn afficher(&self) {
+        println!("Liste déroulante !");
+    }
+}
+
+fn test_poo() {
+    let ecran = Ecran {
+        composants: vec![
+            Box::new(ListeDeroulante {
+                largeur: 75,
+                hauteur: 10,
+                options: vec![
+                    String::from("Oui"),
+                    String::from("Peut-être"),
+                    String::from("Non"),
+                ],
+            }),
+            Box::new(Bouton {
+                largeur: 50,
+                hauteur: 10,
+                libelle: String::from("OK"),
+            }),
+        ],
+    };
+
+    ecran.executer();
+}
+
+// **** Test motifs
+
+fn afficher_coordonnees(&(x, y): &(i32, i32)) {
+    // le motif du prototype de la fonction destructure un tuple
+    println!("Coordonnées actuelles : ({}, {})", x, y);
+}
+
+fn test_motif() {
+    let (x, y, z) = (1, 2.0, '3');
+
+    let point = (3, 5);
+    afficher_coordonnees(&point);
+
+    // let Some(x) = Some(5); ne passe pas à la compil car Some est de type option qui peut aussi donner None, le motif est réfutable
+    // à la place on fait ça et Si on a None le programme n'exécute pas le code dans les accolades
+    if let Some(x) = Some(10) {
+        println!("x={}", x);
+    }
+
+    // Motif sur des litéraux :
+    let x = 1;
+
+    match x {
+        1 => println!("un"),
+        2 => println!("deux"),
+        3 => println!("trois"),
+        _ => println!("n'importe quoi"),
+    }
+
+    // autre test
+    let x = Some(5);
+    let y = 10;
+    match x {
+        Some(50) => println!("On a 50"),
+        Some(y) => println!("Correspondance, y = {:?}", y), // y est une nouvelle variable, donc ça match ici
+        _ => println!("Cas par défaut, x = {:?}", x),
+    }
+    println!("A la fin : x = {:?}, y = {:?}", x, y);
+
+    // motif avec un "ou"
+    let x = 1;
+    match x {
+        1 | 2 => println!("un ou deux"), // | = ou
+        3 => println!("trois"),
+        _ => println!("quelque chose d'autre"),
+    }
+
+    // motif avec interval numérique
+    let x = 5;
+    match x {
+        1..=5 => println!("de un à cinq"),
+        _ => println!("quelque chose d'autre"),
+    }
+
+    // motif avec interval type char :
+    let x = 'c';
+
+    match x {
+        'a'..='j' => println!("lettre ASCII du début"),
+        'k'..='z' => println!("lettre ASCII de la fin"),
+        _ => println!("autre chose"),
+    }
+}
+
+struct Point4 {
+    x: i32,
+    y: i32,
+}
+
+fn test_destructuration_structure() {
+    // avec les motifs on peut destructurer les structures :
+    let p = Point4 { x: 0, y: 7 }; // on instancie la structure
+    let Point4 { x: a, y: b } = p; // et on descrtucture en créant les champ x et y dans les variables a et b
+    println!("a={} b={}", a, b);
+
+    let Point4 { x, y } = p; // idem mais plus rapide on ne renomme pas les variable au passage
+    println!("a={} b={}", x, y);
+
+    // motif avec correspondance que pour certains attributs :
+    let p = Point4 { x: 0, y: 7 };
+    match p {
+        Point4 { x, y: 0 } => println!("Sur l'axe x à la position {}", x),
+        Point4 { x: 0, y } => println!("Sur l'axe y à la position {}", y),
+        Point4 { x, y } => println!("Sur aucun des axes : ({}, {})", x, y),
+    }
+}
+
+enum Message2 {
+    Quitter,
+    Deplacer { x: i32, y: i32 },
+    Ecrire(String),
+    ChangerCouleur(i32, i32, i32),
+}
+
+enum Couleur {
+    Rvb(i32, i32, i32),
+    Tsv(i32, i32, i32),
+}
+
+enum Message3 {
+    Quitter,
+    Deplacer { x: i32, y: i32 },
+    Ecrire(String),
+    ChangerCouleur(Couleur),
+}
+
+fn test_destructuration_enum() {
+    let msg = Message2::ChangerCouleur(0, 160, 255);
+
+    match msg {
+        Message2::Quitter => {
+            println!("La variante Quitter n'a pas de données à déstructurer.")
+        }
+        Message2::Deplacer { x, y } => {
+            println!("Déplacement de {} sur l'axe x et de {} sur l'axe y", x, y);
+        }
+        Message2::Ecrire(text) => println!("Message textuel : {}", text),
+        Message2::ChangerCouleur(r, g, b) => println!(
+            "Changement des taux de rouge à {}, de vert à {} et de bleu à {}",
+            r, g, b
+        ),
+    }
+
+    // destructuration avec plusieurs niveau de profondeur :
+
+    let msg = Message3::ChangerCouleur(Couleur::Tsv(0, 160, 255));
+
+    match msg {
+        Message3::ChangerCouleur(Couleur::Rvb(r, v, b)) => println!(
+            "Changement des taux de rouge à {}, de vert à {} et de bleu à {}",
+            r, v, b
+        ),
+        Message3::ChangerCouleur(Couleur::Tsv(t, s, v)) => println!(
+            // on peut destructurer les types des paramètres des variantes des enum
+            "Changement des taux de teinte à {}, de saturation à {} et de valeur à {}",
+            t, s, v
+        ),
+        _ => (),
+    }
+
+    // déstructuration complexe dans laquelle nous imbriquons des structures et des tuples à l'intérieur d'un tuple et nous y destructurons toutes les valeurs primitives
+    let ((pieds, pouces), Point { x, y }) = ((3, 10), Point { x: 3, y: -10 });
+    println!("{pieds},{pouces},{x},{y}");
+}
+
+// si on implémente un trait mais qu'on utilise pas tous les paramètre dans la fonctoin on peut mettre un _
+// ce qui éviterra que le compilateur nous averstisse qu'on utilise pas le paramètre
+fn fonction(_: i32, y: i32) {
+    println!("Ce code utilise uniquement le paramètre y : {}", y);
+}
+
+fn test_destructuration_avec_underscore() {
+    fonction(3, 4);
+
+    let mut valeur_du_reglage = Some(5);
+    let nouvelle_valeur_du_reglage = None;
+
+    // ici :
+    // Some, None : ok on efface
+    // None, Some : on met à jour
+    // Some, some : on a pas le droit de modifier
+    // None, None : on met à jour (bon là ça sert à rien mais c'est pour l'exemple)
+    match (valeur_du_reglage, nouvelle_valeur_du_reglage) {
+        (Some(_), Some(_)) => {
+            println!("Vous ne pouvez pas écraser une valeur déjà existante");
+        }
+        _ => {
+            // tous les autres cas
+            valeur_du_reglage = nouvelle_valeur_du_reglage;
+        }
+    }
+    println!("Le réglage vaut {:?}", valeur_du_reglage);
+
+    // ici on ignore la deuxième et la quatrième valeur dans un tuple de cinq éléments :
+    let nombres = (2, 4, 8, 16, 32);
+    match nombres {
+        (premier, _, troisieme, _, cinquieme) => {
+            println!(
+                "Voici quelques nombres : {}, {}, {}",
+                premier, troisieme, cinquieme
+            )
+        }
+    }
+
+    // on peut demander à rust de ne pas tenir compte d'une variable qu'on utilise pas :
+    let _x = 5; // là pas d'avertissement du compilateur, utile si on est en cours de dev ou si on fait un proto
+    let y = 10; // ici oui ...
+}
+
+struct Point5 {
+    x: i32,
+    y: i32,
+    z: i32,
+}
+
+fn test_destructuration_avec_deux_point() {
+    // avec une structure
+    let origine = Point5 { x: 0, y: 0, z: 0 };
+    match origine {
+        Point5 { x, .. } => println!("x vaut {}", x), // ici le motif ignore les autres attributs de la structure
+    }
+
+    // avec un enum
+    let nombres = (2, 4, 8, 16, 32);
+
+    match nombres {
+        (premier, .., dernier) => {
+            println!("Voici quelques nombres : {}, {}", premier, dernier);
+        }
+    }
+}
+
+fn test_motif_avec_un_if() {
+    // ajout d'une condition dans le motif :
+    let nombre = Some(4);
+    match nombre {
+        Some(x) if x % 2 == 0 => println!("Le nombre {} est pair", x), // on peut compléter le motif par une condition
+        Some(x) => println!("Le nombre {} est impair", x),
+        None => (),
+    }
+
+    // cas d'utilisation : comparer avec des variables externes au motif :
+    let x = Some(5);
+    let y = 10;
+    match x {
+        Some(50) => println!("Nous obtenons 50"),
+        Some(n) if n == y => println!("Nous avons une correspondance, n = {}", n), // n est crré dans le motif mais y est unevariable déclarée avant le match
+        _ => println!("Cas par défaut, x = {:?}", x),
+    }
+
+    // utilisation du | (ou) avec un if dans un motif
+    let x = 4;
+    let y = false;
+
+    match x {
+        4 | 5 | 6 if y => println!("yes"), // ici si (X = 4, 5, ou 6) et y=vrai
+        _ => println!("no"),
+    }
+}
+
+enum Message5 {
+    Hello { id: i32 },
+}
+
+fn test_motif_avec_une_arobase() {
+    let msg = Message5::Hello { id: 5 };
+
+    match msg {
+        Message5::Hello {
+            id: id_variable @ 3..=7, // permet de tester la correspondance avec un interval et le @ permet de récupérer la variable du motif
+        } => println!(
+            "Nous avons trouvé un id dans l'intervalle : {}",
+            id_variable
+        ),
+        Message5::Hello { id: 10..=12 } => {
+            println!("Nous avons trouvé un id dans un autre intervalle")
+        }
+        Message5::Hello { id } => println!("Nous avons trouvé un autre id : {}", id),
+    }
+}
+
+fn ajouter_un(x: i32) -> i32 {
+    x + 1
+}
+
+fn le_faire_deux_fois(f: fn(i32) -> i32, arg: i32) -> i32 {
+    // on donne le motif de la fonction
+    f(arg) + f(arg) // on appel la fonction passé en argument
+}
+
+fn retourne_une_fermeture() -> Box<dyn Fn(i32) -> i32> {
+    Box::new(|x| x + 1)
+}
+
+fn test_fonction_en_param() {
+    let reponse = le_faire_deux_fois(ajouter_un, 5); // on passe la fonction en argument
+    println!("La réponse est : {}", reponse);
+    // ici on appel une fonction qui retourne un efermeture qu'on appel aussi :
+    println!("Retour de fermeture {}", retourne_une_fermeture()(5));
 }
 
 fn main() {
@@ -1325,6 +1820,7 @@ fn main() {
     test_option();
     test_match2();
     test_if_let();
+    test_while_let();
     test_vecteurs();
     test_string();
     test_table_de_hachage();
@@ -1346,6 +1842,18 @@ fn main() {
     test_iterateur_map();
     test_iterateur_filter();
     test_iterateur_custom();
-    test_thread();
-    test_thread_sender_reciever();
+    //test_thread();
+    //test_thread_sender_reciever();
+    //test_thread_sender_reciever_iterateur();
+    //test_thread_multi_sender();
+    test_thread_mutex();
+    test_poo();
+    test_motif();
+    test_destructuration_structure();
+    test_destructuration_enum();
+    test_destructuration_avec_underscore();
+    test_destructuration_avec_deux_point();
+    test_motif_avec_un_if();
+    test_motif_avec_une_arobase();
+    test_fonction_en_param();
 }
