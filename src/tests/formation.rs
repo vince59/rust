@@ -1102,16 +1102,16 @@ fn test_fermeture_lambda() {
     };
 
     let y = 4;
-    
+
     println!("x({})=y({}) ? : {}", x, y, egal_a_x(y));
-    let x=5; // Même si on redéfini x x garde la valeur initiale 4
+    let x = 5; // Même si on redéfini x x garde la valeur initiale 4
     println!("x({})=y({}) ? : {}", x, y, egal_a_x(y));
 
     let x = vec![1, 2, 3];
     let egal_a_x = move |z| z == x; // avec le mot clé move la lambda détruit les variables de la portée qu'elle utilise 
     //println!("On ne peut pas utiliser x ici : {:?}", x); // x a été détruit dans la fermeture
     let y = vec![1, 2, 3];
-   println!("---->{}",egal_a_x(y));
+    println!("---->{}", egal_a_x(y));
 }
 
 // utilisation d'une fermeture dans une structure
@@ -1126,7 +1126,7 @@ where
 }
 
 impl<T> Cache<T>
-// implémentation du trait Fn dans la structure et du contructure new
+// implémentation du trait Fn dans la structure et du constructeur new
 where
     T: Fn(u32) -> u32,
 {
@@ -1157,6 +1157,17 @@ fn test_fermeture_structure() {
     println!("Appel 1 : {}", mon_calcul.valeur(10)); // la fermeture est exécutée
     println!("Appel 2 : {}", mon_calcul.valeur(30)); // le résultat est en cache on renvoi la valeur
     println!("Appel 2 : {}", mon_calcul.valeur(10)); // idem (même si la valeur du paramètre à changé)
+}
+
+fn test_iterateur() {
+    let v1 = vec![1, 2, 3];
+    let v1_iter = v1.iter(); // on récupère l'itérateur sans l'appeler
+    for val in v1_iter {
+        println!("On a : {}", val);
+    }
+    let total : i32 = v1.iter().sum(); // on ne peut pas réutiliser v1_iter car l'itération consomme l'itérateur
+    println!("Total : {}", total);
+    
 }
 
 fn main() {
@@ -1198,4 +1209,5 @@ fn main() {
     test_sleep();
     test_fermeture_lambda();
     test_fermeture_structure();
+    test_iterateur();
 }
